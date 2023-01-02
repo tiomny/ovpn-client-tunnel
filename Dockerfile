@@ -6,7 +6,7 @@ RUN apk add --no-cache \
         openvpn
 
 COPY entry.sh /usr/bin/
-RUN chmod +x /usr/bin/install.sh
+RUN chmod +x /usr/bin/entry.sh
 
 COPY gateway-fix.sh /usr/bin/
 RUN chmod +x /usr/bin/gateway-fix.sh
