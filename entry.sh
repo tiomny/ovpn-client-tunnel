@@ -48,7 +48,7 @@ dir="/ovpn"
 auth="$dir/vpn.auth"
 cert_auth="$dir/vpn.cert_auth"
 
-iptables -t nat -A PREROUTING -p tcp --dport 3380 -j DNAT --to-destination  ${REMOTEHOST}:${REMOTEPORT}
+iptables -t nat -A PREROUTING -p tcp --dport 3380 -j DNAT --to-destination ${REMOTEHOST}:${REMOTEPORT}
 iptables -t nat -A POSTROUTING -j MASQUERADE
 
 # Setup masquerade, to allow using the container as a gateway
