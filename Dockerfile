@@ -1,4 +1,4 @@
-FROM alpine:3.16
+FROM alpine:latest
 
 RUN apk add --no-cache \
         bash \
@@ -6,10 +6,11 @@ RUN apk add --no-cache \
         openvpn
 
 COPY entry.sh /usr/bin/
-COPY gateway-fix.sh /usr/bin/
+RUN chmod +x /usr/bin/install.sh
 
-ENV KILL_SWITCH=iptables
-ENV USE_VPN_DNS=on
+COPY gateway-fix.sh /usr/bin/
+RUN chmod +x /usr/bin/gateway-fix.sh
+
 ENV VPN_LOG_LEVEL=3
 
 ARG BUILD_DATE
@@ -21,6 +22,3 @@ LABEL image-version=$IMAGE_VERSION
 VOLUME ["/vpn"]
 
 ENTRYPOINT [ "/usr/bin/entry.sh" ]
-
-#ENTRYPOINT [ "/start.sh" ]
-#CMD [ "/start.sh" ]
