@@ -35,6 +35,15 @@ cleanup() {
     exit 0
 }
 
+for ARGUMENT in "$@"
+do
+    KEY=$(echo ${ARGUMENT^^} | cut -f1 -d=)
+ 
+    KEY_LENGTH=${#KEY}
+    VALUE="${ARGUMENT:$KEY_LENGTH+1}"
+    export "$KEY"=$VALUE
+done
+
 if [ -z "$REMOTEHOST" -o -z "$REMOTEPORT" ]; then
   echo "Variables REMOTEHOST, REMOTEPORT must be set."; exit;
 fi
@@ -43,8 +52,11 @@ export VPNTIMEOUT=${VPNTIMEOUT:-5}
 export RETRYDELAY=${RETRYDELAY:-10}
 export RETRYCOUNT=${RETRYCOUNT:-3}
 
-origdir="/vpn"
-dir="/ovpn"
+SCRIPT_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
+SCRIPT_PATH="$(cd -- "$SCRIPT_PATH" && pwd)"
+
+origdir="$SCRIPT_PATH/vpn"
+dir="$SCRIPT_PATH/ovpn"
 auth="$dir/vpn.auth"
 cert_auth="$dir/vpn.cert_auth"
 
