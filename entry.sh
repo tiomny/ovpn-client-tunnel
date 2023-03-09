@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+set -a
 
 ### cert_auth: setup auth passwd for accessing certificate
 # Arguments:
@@ -8,7 +9,7 @@ set -e
 # Return: openvpn argument to support certificate authentication
 cert_auth() { local passwd="$1"
     grep -q "^${passwd}\$" $cert_auth || {
-        echo "$passwd" >$cert_auth
+        $RUNAS echo "$passwd" >$cert_auth
     }
     chmod 0600 $cert_auth
 }
@@ -19,8 +20,8 @@ cert_auth() { local passwd="$1"
 #   pass) password on VPN
 # Return: configured auth file
 vpn_auth() { local user="$1" pass="$2"
-    echo "$user" >$auth
-    echo "$pass" >>$auth
+    $RUNAS echo "$user" >$auth
+    $RUNAS echo "$pass" >>$auth
     chmod 0600 $auth
 }
 
@@ -53,6 +54,8 @@ if [ -z "$REMOTEHOST" -o -z "$REMOTEPORT" ]; then
   echo "Variables REMOTEHOST, REMOTEPORT must be set."; exit;
 fi
 
+RUNAS="sudo -E -u $SUDO_USER"
+
 export VPNTIMEOUT=${VPNTIMEOUT:-5}
 export RETRYDELAY=${RETRYDELAY:-10}
 export RETRYCOUNT=${RETRYCOUNT:-3}
@@ -73,8 +76,6 @@ for iface in $(ip a | grep eth | grep inet | awk '{print $2}'); do
   iptables -t nat -A POSTROUTING -s "$iface" -j MASQUERADE
 done
 
-sudo -i -u $SUDO_USER bash << EOF
-
 config_file=$(find $origdir -name '*.conf' -o -name '*.ovpn' 2> /dev/null | sort | shuf -n 1)
 
 if [[ -z $config_file ]]; then
@@ -84,7 +85,7 @@ fi
 
 echo "info: configuration file: $config_file"
 
-[[ ! -d "$dir" ]] && cp -r "$origdir" "$dir"
+[[ ! -d "$dir" ]] && $RUNAS cp -r "$origdir" "$dir"
 	
 [[ -e $auth ]] && rm -f "$auth"
 [[ -e $cert_auth ]] && rm -f "$cert_auth"
@@ -92,14 +93,12 @@ echo "info: configuration file: $config_file"
 config_file="${config_file/"$origdir"/"$dir"}"
 
 # Remove carriage returns (\r) from the config file
-sed -i 's/\r$//g' "$config_file"
+$RUNAS sed -i 's/\r$//g' "$config_file"
 
 [[ "${CERTAUTH:-}" ]] && cert_auth "$CERTAUTH"
 
 [[ "${VPNAUTH:-}" ]] &&
     eval vpn_auth $(sed 's/^/"/; s/$/"/; s/;/" "/g' <<< $VPNAUTH)
-
-EOF
 
 openvpn_args=(
     "--config" "$config_file"
