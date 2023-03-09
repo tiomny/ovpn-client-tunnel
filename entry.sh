@@ -108,7 +108,7 @@ openvpn_args=(
 
 echo "info: openvpn_args: ${openvpn_args[@]}"
 
-/usr/bin/gateway-fix.sh &
+$SCRIPT_PATH/gateway-fix.sh &
 (
     openvpn "${openvpn_args[@]}" &
     openvpn_child=$!
