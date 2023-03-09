@@ -73,6 +73,8 @@ for iface in $(ip a | grep eth | grep inet | awk '{print $2}'); do
   iptables -t nat -A POSTROUTING -s "$iface" -j MASQUERADE
 done
 
+sudo -i -u $SUDO_USER bash << EOF
+
 config_file=$(find $origdir -name '*.conf' -o -name '*.ovpn' 2> /dev/null | sort | shuf -n 1)
 
 if [[ -z $config_file ]]; then
@@ -96,6 +98,8 @@ sed -i 's/\r$//g' "$config_file"
 
 [[ "${VPNAUTH:-}" ]] &&
     eval vpn_auth $(sed 's/^/"/; s/$/"/; s/;/" "/g' <<< $VPNAUTH)
+
+EOF
 
 openvpn_args=(
     "--config" "$config_file"
