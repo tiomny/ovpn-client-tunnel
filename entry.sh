@@ -35,6 +35,11 @@ cleanup() {
     exit 0
 }
 
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
+
 for ARGUMENT in "$@"
 do
     KEY=$(echo ${ARGUMENT^^} | cut -f1 -d=)
