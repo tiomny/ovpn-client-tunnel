@@ -63,20 +63,20 @@ export RETRYCOUNT=${RETRYCOUNT:-3}
 SCRIPT_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
 SCRIPT_PATH="$(cd -- "$SCRIPT_PATH" && pwd)"
 
-origdir="$SCRIPT_PATH/vpn"
-dir="$SCRIPT_PATH/ovpn"
+dir="$SCRIPT_PATH/vpn"
 auth="$dir/vpn.auth"
 cert_auth="$dir/vpn.cert_auth"
 
 iptables -t nat -A PREROUTING -p tcp --dport 3380 -j DNAT --to-destination ${REMOTEHOST}:${REMOTEPORT}
-iptables -t nat -A POSTROUTING -j MASQUERADE
+iptables -t nat -I POSTROUTING -p tcp -d ${REMOTEHOST} --dport ${REMOTEPORT} -j MASQUERADE
+# iptables -t nat -A POSTROUTING -j MASQUERADE
 
-# Setup masquerade, to allow using the container as a gateway
-for iface in $(ip a | grep eth | grep inet | awk '{print $2}'); do
-  iptables -t nat -A POSTROUTING -s "$iface" -j MASQUERADE
-done
+# # Setup masquerade, to allow using the container as a gateway
+# for iface in $(ip a | grep eth | grep inet | awk '{print $2}'); do
+  # iptables -t nat -A POSTROUTING -s "$iface" -j MASQUERADE
+# done
 
-config_file=$(find $origdir -name '*.conf' -o -name '*.ovpn' 2> /dev/null | sort | shuf -n 1)
+config_file=$(find $dir -name '*.conf' -o -name '*.ovpn' 2> /dev/null | sort | shuf -n 1)
 
 if [[ -z $config_file ]]; then
     >&2 echo 'erro: no vpn configuration file found'
@@ -85,12 +85,8 @@ fi
 
 echo "info: configuration file: $config_file"
 
-[[ ! -d "$dir" ]] && $RUNAS cp -r "$origdir" "$dir"
-	
 [[ -e $auth ]] && rm -f "$auth"
 [[ -e $cert_auth ]] && rm -f "$cert_auth"
-
-config_file="${config_file/"$origdir"/"$dir"}"
 
 # Remove carriage returns (\r) from the config file
 $RUNAS sed -i 's/\r$//g' "$config_file"
