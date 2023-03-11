@@ -67,6 +67,8 @@ dir="$SCRIPT_PATH/vpn"
 auth="$dir/vpn.auth"
 cert_auth="$dir/vpn.cert_auth"
 
+sysctl -w net.ipv4.ip_forward=1
+
 iptables -t nat -A PREROUTING -p tcp --dport 3380 -j DNAT --to-destination ${REMOTEHOST}:${REMOTEPORT}
 # iptables -t nat -I POSTROUTING -p tcp -d ${REMOTEHOST} --dport ${REMOTEPORT} -j MASQUERADE
 iptables -t nat -A POSTROUTING -j MASQUERADE
